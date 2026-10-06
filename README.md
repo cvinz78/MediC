@@ -143,6 +143,52 @@ d9ca54c1675c2882a4a623983cfcf099ce2bb7954af93b50bae52362124f83c3  MediC-linux-x6
 
 ---
 
+## Selbst bauen
+
+Der komplette Quellcode der App liegt im Repo — die Anwendung ist bewusst **eine einzige
+Python-Datei**. Zum Bauen aller drei Varianten ist genau dieses Set nötig:
+
+| Datei | Zweck |
+|---|---|
+| `mediacenter.py` | die komplette App als Einzeldatei (Quelle für Windows; läuft auch direkt per `python mediacenter.py`) |
+| `installer.py` | Windows-Installer (bietet „Installieren“ und „Portable entpacken“) |
+| `build_windows.bat` | Komplett-Build Windows 10/11 (+ optional Linux, wenn Docker vorhanden ist) |
+| `build_windows_win7.bat` | Build für Windows 7 SP1/8.1 (PyQt5) |
+| `requirements.txt` | Laufzeit-Abhängigkeiten (PySide6, Pillow) |
+| `icon/mediacenter.png` + `icon/mediacenter.ico` | App-Icon (Bau + Laufzeit) |
+| `linux-version/mediacenter.py` | Linux-Variante des Quellcodes (plattformspezifische Anpassungen) |
+| `linux-version/launcher_stub.py` | Smart-Cache-Launcher (entpackt einmalig nach `/tmp/MediaCenter/<Version>`) |
+| `linux-version/build_linux_docker.sh` | Build-Skript für den Docker-Container |
+| `scripts/make_ico.py` | erzeugt die `.ico` aus dem PNG |
+| `scripts/win7_version.txt` | Versionsressource für die Win7-EXE |
+| `scripts/write_sha.py` | schreibt `dist/sha.txt` + `linux-version/sha.txt` (SHA-256, vollständig) |
+
+| Ziel | Befehl | Ergebnis | Umgebung |
+|---|---|---|---|
+| Windows 10/11 | `build_windows.bat` | `dist\mediacenter-installer.exe` (+ `dist\MediaCenter`, wenn Docker da ist) | Windows, Python 3.10+ |
+| Windows 7 SP1/8.1 | `build_windows_win7.bat` | `dist\MediaCenter.exe` | Windows, Python 3.8.10 |
+| Linux | `docker run --rm -v <repo>/linux-version:/app:ro -v <repo>/icon:/icon:ro -v <repo>/dist:/out python:3.12-slim bash /app/build_linux_docker.sh` | `dist/MediaCenter` | Docker |
+
+Die `.bat`-Skripte legen ihre venv selbst an und installieren alle Abhängigkeiten
+(PySide6/PyQt5, Pillow, PyInstaller). Der Linux-Build läuft bewusst im Container
+(`python:3.12-slim`), damit das Ergebnis auf gängigen Distributionen läuft — PyInstaller
+kann nicht kreuzkompilieren, deshalb baut man die Windows-EXE unter Windows und das
+Linux-ELF unter Linux/Docker. Nach dem Bau schreibt
+`python3 scripts/write_sha.py` die `sha.txt` mit allen Hashes.
+
+### Direkt aus dem Quellcode starten (ohne Bauen)
+
+```bash
+pip install -r requirements.txt     # PySide6, Pillow
+python3 mediacenter.py              # unter Windows: python mediacenter.py
+```
+
+Braucht Python 3.10+ und einen installierten Player (VLC empfohlen); optional `ffmpeg`
+für Video-Thumbnails. Unter minimalen Linux-Systemen zusätzlich
+`libgl1 libegl1 libxkbcommon0 libglib2.0-0 libdbus-1-3 libfontconfig1`.
+
+---
+
 ## Erste Schritte
 
 1. Starten → **Einstellungen → Bibliotheken → Hinzufügen**: Ordner wählen (z. B. `~/Filme`,

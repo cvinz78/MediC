@@ -1,0 +1,15 @@
+PySide6>=6.6
+Pillow>=10.0
+# Optional, nur für internen Player (Phase 8, nicht Pflicht):
+# python-vlc
+#
+# Nur für den Windows-7/8.1-EXE-Build (build_windows_win7.bat, siehe
+# ANLEITUNG_WINDOWS.md) — Qt 6 läuft dort nicht, mediacenter.py erkennt PyQt5
+# automatisch als Fallback. NIEMALS zur Laufzeit nötig:
+# PyQt5==5.15.11
+#
+# Nur für den Bau der einzelnen ausführbaren Datei (build_app.sh, AGENTS.md § 1):
+# pyinstaller + pyinstaller-hooks-contrib
+# Begründung: PyInstaller bündelt PySide6/Pillow/Python zu einer nativen
+# Linux-Binärdatei. Wird nur im Build-Container gebraucht, NIEMALS zur Laufzeit —
+# daher kommentiert und nicht Teil der Laufzeit-Abhängigkeiten.
