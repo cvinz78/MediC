@@ -122,8 +122,14 @@ Fertige Builds gibt es in den
 
 | Datei | Plattform | Was es ist |
 |---|---|---|
-| `MediC-windows-x64.exe` | Windows 10/11 (x64) | Installer — bietet **Installieren** (Startmenü + „Programme und Features“) oder **Portable entpacken** (z. B. USB-Stick). Die App-EXE heißt danach `MediaCenterx64.exe` |
+| `MediC-windows-x64.exe` | Windows 10/11 (x64) | **Installer — enthält beide Varianten in einer Datei:** beim Start wählt man **„Installieren“** (Programmordner, Startmenü-Verknüpfung, Eintrag unter „Programme und Features“ mit Deinstallation) oder **„Portable entpacken“** (Programmordner ohne Verknüpfungen/Registry — ideal z. B. für den USB-Stick). Die App-EXE heißt danach `MediaCenterx64.exe` |
 | `MediC-linux-x64` | Linux (x64) | Eine einzelne ausführbare Datei — kein Python/pip nötig, nur einen Desktop mit VLC/mpv |
+
+> **Windows ohne Installation:** Wer nichts installieren möchte, führt die
+> `MediC-windows-x64.exe` aus und wählt **„Portable entpacken“** — der Installer
+> kopiert dann nur den Programmordner in ein eigenes Verzeichnis der eigenen Wahl.
+> Gestartet wird über die `MediaCenterx64.exe` in diesem Ordner; deinstallieren
+> = Ordner löschen.
 
 **SHA-256 (Version 1.5):**
 
