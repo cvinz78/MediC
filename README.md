@@ -206,6 +206,33 @@ für Video-Thumbnails. Unter minimalen Linux-Systemen zusätzlich
 
 ---
 
+## Netzwerk-Freigaben: bewusst nur lokale Bibliotheken
+
+MediC unterstützt **bewusst keine Netzwerkprotokolle** (kein SMB, NFS, DLNA/UPnP —
+weder beim Scannen noch bei der Wiedergabe). Grund: Eine Mediathek-GUI, die selbst
+über das Netzwerk liest und abspielt, müsste verlangen, dass auch der externe
+Mediaplayer (VLC, mpv …) dasselbe Protokoll beherrscht — das macht die App vom
+Player abhängig und die Fehlersuche unzuverlässig. Deshalb arbeitet MediC
+ausschließlich mit **lokalen Ordnerpfaden**.
+
+**Netzwerkquellen gehen trotzdem** — über das Betriebssystem: Die Freigabe wird
+einmalig in Windows bzw. Linux **eingebunden (gemountet)**, und der eingebundene
+Ordner wird ganz normal als Bibliothek angegeben:
+
+| Plattform | Freigabe einbinden | Beispiel-Pfad für die Bibliothek |
+|---|---|---|
+| Windows | Explorer → „Netzlaufwerk verbinden“ (oder `net use Z: \\NAS\Filme /persistent:yes`) | `Z:\Filme` |
+| Linux | `mount` von SMB/NFS, z. B. `sudo mount -t cifs //NAS/Filme /mnt/filme` (oder fstab/autofs) | `/mnt/filme` |
+
+Für MediC ist ein eingebundener Netzwerk-Mount ein ganz normaler lokaler Ordner:
+Der Scan liest die Dateien über das Dateisystem, und die Wiedergabe startet den
+Player mit dem Pfad — **die Netzwerktechnik übernimmt das Betriebssystem bzw. der
+Player, nicht MediC**. Scans über langsame Mounts (NFS/SMB) bleiben dank
+Fortschrittsanzeige und abbrechbar bedienbar; IO-Fehler (Mount nicht erreichbar)
+brechen den Scan nie ab, sondern werden als Warnung behandelt.
+
+---
+
 ## Erkennungsregeln
 
 | Typ | Gesucht wird (Reihenfolge = Priorität) |
