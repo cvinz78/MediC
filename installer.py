@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 APP_NAME = "MediaCenter"
-APP_VERSION = "1.6"
+APP_VERSION = "1.9"
 PAYLOAD_DIRNAME = "MediaCenterx64"
 EXE_NAME = "MediaCenterx64.exe"
 UNINSTALL_FILENAME = "uninstall.cmd"

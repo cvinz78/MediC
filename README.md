@@ -131,11 +131,11 @@ Fertige Builds gibt es in den
 > Gestartet wird über die `MediaCenterx64.exe` in diesem Ordner; deinstallieren
 > = Ordner löschen.
 
-**SHA-256 (Version 1.5):**
+**SHA-256 (Version 1.9):**
 
 ```
-e3f65af3df60df69c618cae01a0c39bca7774622f53ce14c093c8e741faef9e5  MediC-windows-x64.exe
-d9ca54c1675c2882a4a623983cfcf099ce2bb7954af93b50bae52362124f83c3  MediC-linux-x64
+b764ed1ea6bcbb2b4da32088706d625ed97250f179362beaaaf9b4424f62d4b8  MediC-windows-x64.exe
+036f738c66893b8fe11760601ed517aa6e31fbb92b3334daa542a39415760545  MediC-linux-x64
 ```
 
 **Hinweise:**
@@ -158,8 +158,10 @@ Python-Datei**. Zum Bauen aller drei Varianten ist genau dieses Set nötig:
 |---|---|
 | `mediacenter.py` | die komplette App als Einzeldatei (Quelle für Windows; läuft auch direkt per `python mediacenter.py`) |
 | `installer.py` | Windows-Installer (bietet „Installieren“ und „Portable entpacken“) |
-| `build_windows.bat` | Komplett-Build Windows 10/11 (+ optional Linux, wenn Docker vorhanden ist) |
+| `build_windows.bat` | Komplett-Build Windows 10/11-Installer |
 | `build_windows_win7.bat` | Build für Windows 7 SP1/8.1 (PyQt5) |
+| `build_linux.bat` | Build NUR die Linux-Variante (braucht Docker, läuft auch unter Windows) |
+| `build_all.bat` | baut alle drei Varianten nacheinander + Gesamt-`sha.txt` |
 | `requirements.txt` | Laufzeit-Abhängigkeiten (PySide6, Pillow) |
 | `icon/mediacenter.png` + `icon/mediacenter.ico` | App-Icon (Bau + Laufzeit) |
 | `linux-version/mediacenter.py` | Linux-Variante des Quellcodes (plattformspezifische Anpassungen) |
@@ -171,9 +173,10 @@ Python-Datei**. Zum Bauen aller drei Varianten ist genau dieses Set nötig:
 
 | Ziel | Befehl | Ergebnis | Umgebung |
 |---|---|---|---|
-| Windows 10/11 | `build_windows.bat` | `dist\mediacenter-installer.exe` (+ `dist\MediaCenter`, wenn Docker da ist) | Windows, Python 3.10+ |
+| Windows 10/11 | `build_windows.bat` | `dist\mediacenter-installer.exe` | Windows, Python 3.10+ |
 | Windows 7 SP1/8.1 | `build_windows_win7.bat` | `dist\MediaCenter.exe` | Windows, Python 3.8.10 |
-| Linux | `docker run --rm -v <repo>/linux-version:/app:ro -v <repo>/icon:/icon:ro -v <repo>/dist:/out python:3.12-slim bash /app/build_linux_docker.sh` | `dist/MediaCenter` | Docker |
+| Linux | `build_linux.bat` (unter Windows) bzw. `docker run --rm -v <repo>/linux-version:/app:ro -v <repo>/icon:/icon:ro -v <repo>/dist:/out python:3.12-slim bash /app/build_linux_docker.sh` (unter Linux) | `dist/MediaCenter` | Docker |
+| Alle drei | `build_all.bat` | alle drei Artefakte + `dist\sha.txt` | Windows + Docker |
 
 Die `.bat`-Skripte legen ihre venv selbst an und installieren alle Abhängigkeiten
 (PySide6/PyQt5, Pillow, PyInstaller). Der Linux-Build läuft bewusst im Container

@@ -71,7 +71,7 @@ VALID_THEMES = ("darkskin", "bluemoon", "creamy")
 SETTINGS_VERSION = 2
 
 #: Programmversion — sichtbar im Fenstertitel (Build-Kennzeichnung).
-APP_VERSION = "1.6"
+APP_VERSION = "1.9"
 
 
 def data_root() -> Path:
@@ -3260,6 +3260,9 @@ class SeriesView(QWidget):
         self._season_list = QListWidget()
         self._season_list.setViewMode(QListWidget.ViewMode.IconMode)
         self._season_list.setIconSize(QSize(140, 210))
+        # Fixe Rasterzellen (wie PosterGrid): ohne gridSize positioniert IconMode
+        # Kacheln nur im Text-Takt — die 140-px-Icons stapeln sich dann übereinander.
+        self._season_list.setGridSize(QSize(140 + 18, 210 + 26 + 14))
         self._season_list.setMovement(QListWidget.Movement.Static)
         self._season_list.setResizeMode(QListWidget.ResizeMode.Adjust)
         self._season_list.setWordWrap(True)
@@ -3492,6 +3495,7 @@ class SeriesView(QWidget):
             # Kontextmenü und „Zur Playlist hinzufügen“ direkt auf Staffel-Ebene.
             item.setData(Qt.ItemDataRole.UserRole, MediaRef("season", show.id, season=season.number))
             self._season_list.addItem(item)
+            item.setSizeHint(self._season_list.gridSize())
             self._request_thumb(
                 "season",
                 f"{show.id}:{season.number}",

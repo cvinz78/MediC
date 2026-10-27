@@ -21,7 +21,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-APP_VERSION = "1.6"  # muss zur Version des eingebetteten Pakets passen
+APP_VERSION = "1.9"  # muss zur Version des eingebetteten Pakets passen
 APP_NAME = "MediaCenter"
 PAYLOAD_ZIP = "mediacenter-payload.zip"
 BINARY_NAME = "MediaCenter-fast"
