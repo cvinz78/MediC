@@ -167,6 +167,7 @@ Python-Datei**. Zum Bauen aller drei Varianten ist genau dieses Set nötig:
 | `linux-version/mediacenter.py` | Linux-Variante des Quellcodes (plattformspezifische Anpassungen) |
 | `linux-version/launcher_stub.py` | Smart-Cache-Launcher (entpackt einmalig nach `/tmp/MediaCenter/<Version>`) |
 | `linux-version/build_linux_docker.sh` | Build-Skript für den Docker-Container |
+| `build_app.sh` | Build-Skript für Linux (Docker mit Fallback auf lokales venv) |
 | `scripts/make_ico.py` | erzeugt die `.ico` aus dem PNG |
 | `scripts/win7_version.txt` | Versionsressource für die Win7-EXE |
 | `scripts/write_sha.py` | schreibt `dist/sha.txt` + `linux-version/sha.txt` (SHA-256, vollständig) |
@@ -175,8 +176,13 @@ Python-Datei**. Zum Bauen aller drei Varianten ist genau dieses Set nötig:
 |---|---|---|---|
 | Windows 10/11 | `build_windows.bat` | `dist\mediacenter-installer.exe` | Windows, Python 3.10+ |
 | Windows 7 SP1/8.1 | `build_windows_win7.bat` | `dist\MediaCenter.exe` | Windows, Python 3.8.10 |
-| Linux | `build_linux.bat` (unter Windows) bzw. `docker run --rm -v <repo>/linux-version:/app:ro -v <repo>/icon:/icon:ro -v <repo>/dist:/out python:3.12-slim bash /app/build_linux_docker.sh` (unter Linux) | `dist/MediaCenter` | Docker |
+| Linux | `./build_app.sh` (alternativ unter Windows: `build_linux.bat`) | `dist/MediaCenter` | Linux, Docker (Fallback: lokales venv) |
 | Alle drei | `build_all.bat` | alle drei Artefakte + `dist\sha.txt` | Windows + Docker |
+
+`build_app.sh` nutzt automatisch Docker (`python:3.12-slim`), damit das Ergebnis auf
+gängigen Distributionen läuft — ohne Docker fällt es auf ein lokales venv zurück.
+Wer es ohne Skript mag, kann den Container auch direkt füttern:
+`docker run --rm -v <repo>/linux-version:/app:ro -v <repo>/icon:/icon:ro -v <repo>/dist:/out python:3.12-slim bash /app/build_linux_docker.sh`.
 
 Die `.bat`-Skripte legen ihre venv selbst an und installieren alle Abhängigkeiten
 (PySide6/PyQt5, Pillow, PyInstaller). Der Linux-Build läuft bewusst im Container
