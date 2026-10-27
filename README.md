@@ -135,7 +135,7 @@ Fertige Builds gibt es in den
 
 ```
 b764ed1ea6bcbb2b4da32088706d625ed97250f179362beaaaf9b4424f62d4b8  MediC-windows-x64.exe
-036f738c66893b8fe11760601ed517aa6e31fbb92b3334daa542a39415760545  MediC-linux-x64
+82523296a58aacb8e74d36048232652940e181c856eaee215dc2063da3478a82  MediC-linux-x64
 ```
 
 **Hinweise:**
