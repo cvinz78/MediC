@@ -21,7 +21,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-APP_VERSION = "2.3"  # muss zur Version des eingebetteten Pakets passen
+APP_VERSION = "2.7"  # muss zur Version des eingebetteten Pakets passen
 APP_NAME = "MediaCenter"
 PAYLOAD_ZIP = "mediacenter-payload.zip"
 BINARY_NAME = "MediaCenter-fast"
@@ -85,7 +85,19 @@ def main() -> int:
     if not exe.is_file():
         show_error(f"Anwendung nicht gefunden: {exe}")
         return 1
-    subprocess.Popen([str(exe)], cwd=str(runtime))
+    # Komplett vom Terminal trennen: Ohne Umlenkung erbt die App stdout/stderr
+    # des Terminals — ihre Logzeilen erscheinen dann unter dem bereits
+    # zurückgegebenen Prompt, und der Terminal-Tab bleibt am (Hintergrund-)
+    # Prozess „angehängt“, obwohl die GUI längst geschlossen ist. Die
+    # Protokollierung läuft weiterhin in logs/mediacenter.log.
+    subprocess.Popen(
+        [str(exe)],
+        cwd=str(runtime),
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
     return 0
 
 

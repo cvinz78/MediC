@@ -76,7 +76,7 @@ VALID_THEMES = ("darkskin", "bluemoon", "creamy")
 SETTINGS_VERSION = 2
 
 #: Programmversion — sichtbar im Fenstertitel (Build-Kennzeichnung).
-APP_VERSION = "2.3"
+APP_VERSION = "2.7"
 
 
 def data_root() -> Path:
@@ -219,6 +219,7 @@ def defaults() -> dict:
     return {
         "libraries": [],
         "players": [],
+        "language": "de",
         "playback": {"fullscreen": False, "youtube_trailer": "browser"},
         "ui": {"theme": "darkskin", "poster_width": 200, "label_under_poster": True},
         "scan": {"scan_on_start": True},
@@ -255,6 +256,11 @@ def normalize_library_type(raw: str) -> str:
 
 
 def _validate(cfg: dict) -> dict:
+    if cfg.get("language") not in ("de", "en"):
+        if cfg.get("language"):
+            logger.warning("Unbekannte Sprache %r — nutze Deutsch", cfg.get("language"))
+        cfg["language"] = "de"
+
     if not isinstance(cfg.get("libraries"), list):
         cfg["libraries"] = []
     libs = []
@@ -2193,6 +2199,7 @@ try:  # Qt 6 (PySide6) — Standard auf Linux und Windows 10/11
         QModelIndex,
         QObject,
         QPoint,
+        QProcess,
         QRect,
         QSize,
         QSortFilterProxyModel,
@@ -2255,6 +2262,7 @@ except ImportError:  # Windows 7/8.1: Qt 6 läuft dort nicht → PyQt5 (Qt 5.15)
         QModelIndex,
         QObject,
         QPoint,
+        QProcess,
         QRect,
         QSize,
         QSortFilterProxyModel,
@@ -2465,6 +2473,7 @@ def get_stylesheet(theme_name: str) -> str:
 # UI-Texte (deutsch)
 class S:
     APP_TITLE = f"MediaCenter {APP_VERSION}"
+    LANGUAGE = "de"  # aktuelle UI-Sprache (set_language), Default Deutsch
     NAV_MOVIES, NAV_SHOWS, NAV_PLAYLISTS, NAV_SETTINGS = "Filme", "Serien", "Playlisten", "Einstellungen"
     NAV_THEME_BUTTON = "Theme: {}"
     STATUS_THEME_CHANGED = "Theme gewechselt: {}"
@@ -2516,6 +2525,10 @@ class S:
     SERIES_SEASON_TILE = "Staffel {}"
     SERIES_EPISODES_TITLE = "Episoden"
     SERIES_NO_EPISODES = "Keine Episoden gefunden"
+    SERIES_NAV_BACK = "◀ Zurück"
+    SERIES_NAV_FORWARD = "Vor ▶"
+    SERIES_NAV_BACK_TOOLTIP = "Eine Ebene zurück (wie Esc)"
+    SERIES_NAV_FORWARD_TOOLTIP = "Eine Ebene vor — aktiv nach „Zurück“"
     SERIES_EPISODE_PREFIX = "S{:02d}E{:02d}"
     PLAYLIST_NEW, PLAYLIST_RENAME, PLAYLIST_DELETE = "Neu", "Umbenennen", "Löschen"
     PLAYLIST_DELETE_CONFIRM = "Playlist „{}“ wirklich löschen?"
@@ -2567,6 +2580,7 @@ class S:
     SETTINGS_PLAYBACK_YOUTUBE = "YouTube-Trailer öffnen in:"
     SETTINGS_YOUTUBE_BROWSER, SETTINGS_YOUTUBE_VLC = "Browser", "VLC"
     SETTINGS_VIEW_THEME = "Theme"
+    SETTINGS_VIEW_LANGUAGE = "Sprache"
     SETTINGS_VIEW_POSTER_WIDTH = "Postergröße"
     #: 4 feste Stufen — die bisherige Größe (200) ist die größte.
     SETTINGS_POSTER_LEVELS = (("Klein", 120), ("Mittel", 150), ("Groß", 175), ("Sehr groß", 200))
@@ -2605,18 +2619,252 @@ class S:
     STATUS_FOLDER_MISSING = "Ordner nicht gefunden: {}"
     STATUS_ERROR = "Fehler: {}"
     PLACEHOLDER_NO_POSTER = "Kein Poster"
+    LANG_CHANGED_TITLE = "Sprache geändert"
+    LANG_CHANGED_TEXT = (
+        "Die neue Sprache wird beim nächsten Start vollständig übernommen.\n\n"
+        "Soll das MediaCenter jetzt neu gestartet werden?"
+    )
+    LANG_RESTART_NOW = "Jetzt neu starten"
+    LANG_RESTART_LATER = "Später"
+    LANG_DEFERRED_STATUS = "Sprache geändert — wird nach einem Neustart vollständig übernommen"
+
+    ACTION_LABELS = {
+        "play": "Abspielen (Enter)",
+        "details": "Details / Medieninfos",
+        "trailer": "Trailer abspielen",
+        "search": "Suche fokussieren",
+        "scan": "Bibliotheken scannen",
+        "back": "Zurück / Dialog schließen",
+        "playlist_remove": "Eintrag aus Playlist entfernen",
+    }
 
     @staticmethod
     def action_label(action_id: str) -> str:
-        return {
-            "play": "Abspielen (Enter)",
-            "details": "Details / Medieninfos",
-            "trailer": "Trailer abspielen",
-            "search": "Suche fokussieren",
-            "scan": "Bibliotheken scannen",
-            "back": "Zurück / Dialog schließen",
-            "playlist_remove": "Eintrag aus Playlist entfernen",
-        }.get(action_id, action_id)
+        return S.ACTION_LABELS.get(action_id, action_id)
+
+
+# -- Sprachumschaltung (de/en) ------------------------------------------------
+# Deutsch ist die Quelle: Nach dem Klassenkörper werden alle übersetzbaren
+# Attribute als _DE gesichert. _EN_STRINGS enthält nur Abweichungen; alles,
+# was dort nicht steht, bleibt beim Umschalten auf Englisch unverändert.
+
+S._DE = {
+    key: value
+    for key, value in vars(S).items()
+    if key.isupper() and isinstance(value, (str, tuple, dict))
+}
+
+_EN_STRINGS = {
+    "LANGUAGE": "en",
+    "NAV_MOVIES": "Movies",
+    "NAV_SHOWS": "TV Shows",
+    "NAV_PLAYLISTS": "Playlists",
+    "NAV_SETTINGS": "Settings",
+    "NAV_THEME_BUTTON": "Theme: {}",
+    "STATUS_THEME_CHANGED": "Theme changed: {}",
+    "SEARCH_PLACEHOLDER": "Search… (title, genre, year)",
+    "SORT_TITLE": "Title",
+    "SORT_YEAR": "Year",
+    "FILTER_GENRE": "Genre",
+    "FILTER_GENRE_ALL": "All genres",
+    "FILTER_GENRE_ENTRY": "{} ({})",
+    "FILTER_GENRE_LABEL": "Genre: {}",
+    "GENRE_BUTTON": "Genre",
+    "GENRE_FILTER_ACTIVE": "Genre ({})",
+    "GENRE_DIALOG_TITLE": "Filter genres",
+    "GENRE_DIALOG_HINT": (
+        "Select one or more genres. Without a selection all titles are shown."
+    ),
+    "GENRE_ENTRY": "{} ({})",
+    "GENRE_CLEAR": "Clear selection",
+    "STATUS_GENRE_FILTER": "Genre filter: {}",
+    "STATUS_GENRE_FILTER_OFF": "Genre filter cleared",
+    "VIEW_POSTERS": "Posters",
+    "VIEW_LIST": "List",
+    "RANDOM_PLAY": "Random",
+    "RANDOM_TOOLTIP": (
+        "Plays a random movie or (in the series view) a random episode — "
+        "from the filtered entries if a filter (search/genre/year) is active."
+    ),
+    "STATUS_RANDOM_EMPTY": "No playable entries for random playback",
+    "MENU_PLAY": "Play",
+    "MENU_TRAILER": "Play trailer",
+    "MENU_DETAILS": "Details / Media info…",
+    "MENU_ADD_TO_PLAYLIST": "Add to playlist",
+    "MENU_NEW_PLAYLIST": "New playlist…",
+    "MENU_OPEN_FOLDER": "Open folder",
+    "MENU_RESCAN": "Re-read metadata",
+    "MENU_REMOVE_FROM_PLAYLIST": "Remove from playlist",
+    "MENU_REMOVE_FROM_LIBRARY": "Remove from library",
+    "REMOVE_FROM_LIBRARY_CONFIRM": (
+        "Remove “{}” from the library?\n\nThe files on the disk remain untouched."
+    ),
+    "STATUS_LIBRARY_REMOVED": "Removed from library: {}",
+    "STATUS_ORPHANS_REMOVED": "{} entries removed (library no longer configured)",
+    "STATUS_SHOW_ADDED_TO_PLAYLIST": "{} episodes added to playlist “{}”",
+    "STATUS_PLAYLIST_EPISODES_ADDED": "{} episodes added to playlist",
+    "STATUS_SHOW_NO_EPISODES": "No playable episodes found: {}",
+    "DETAILS_TITLE": "Media info",
+    "DETAILS_YEAR": "Year",
+    "DETAILS_RATING": "Rating",
+    "DETAILS_RUNTIME": "Runtime",
+    "DETAILS_MINUTES": "{} min",
+    "DETAILS_GENRES": "Genres",
+    "DETAILS_STUDIO": "Studio",
+    "DETAILS_DIRECTOR": "Director",
+    "DETAILS_ACTORS": "Cast",
+    "DETAILS_FILES": "Files",
+    "DETAILS_FILES_VIDEO": "Video",
+    "DETAILS_FILES_TRAILER": "Trailer",
+    "DETAILS_FILES_TRAILER_URL": "Trailer (web)",
+    "DETAILS_FILES_NFO": "NFO",
+    "DETAILS_SEASONS_EPISODES": "Seasons / Episodes",
+    "DETAILS_BUTTON_PLAY": "Play",
+    "DETAILS_BUTTON_TRAILER": "Trailer",
+    "DETAILS_BUTTON_CLOSE": "Close",
+    "SERIES_BREADCRUMB_ROOT": "Series",
+    "SERIES_SEASON_TILE": "Season {}",
+    "SERIES_EPISODES_TITLE": "Episodes",
+    "SERIES_NO_EPISODES": "No episodes found",
+    "SERIES_NAV_BACK": "◀ Back",
+    "SERIES_NAV_FORWARD": "Forward ▶",
+    "SERIES_NAV_BACK_TOOLTIP": "One level back (like Esc)",
+    "SERIES_NAV_FORWARD_TOOLTIP": "One level forward — enabled after “Back”",
+    "PLAYLIST_NEW": "New",
+    "PLAYLIST_RENAME": "Rename",
+    "PLAYLIST_DELETE": "Delete",
+    "PLAYLIST_DELETE_CONFIRM": "Really delete playlist “{}”?",
+    "PLAYLIST_EMPTY_HINT": "No playlist selected",
+    "PLAYLIST_PLAY": "Play",
+    "PLAYLIST_EXPORT": "Export",
+    "PLAYLIST_IMPORT": "Import (M3U/M3U8)",
+    "PLAYLIST_NEW_NAME": "Name of the new playlist:",
+    "PLAYLIST_RENAME_TITLE": "Rename playlist",
+    "PLAYLIST_ITEM_REMOVE_CONFIRM": "Remove item \"{}\" from the playlist?",
+    "SETTINGS_TITLE": "Settings",
+    "SETTINGS_TAB_LIBRARIES": "Libraries",
+    "SETTINGS_TAB_PLAYERS": "Players",
+    "SETTINGS_TAB_PLAYBACK": "Playback",
+    "SETTINGS_TAB_VIEW": "View",
+    "SETTINGS_TAB_SHORTCUTS": "Shortcuts",
+    "SETTINGS_LIB_COUNT": "Count",
+    "SETTINGS_SCAN_ON_START": "Scan libraries on every MediaCenter start",
+    "SETTINGS_LIB_NAME": "Name",
+    "SETTINGS_LIB_TYPE": "Type",
+    "SETTINGS_LIB_PATH": "Path",
+    "SETTINGS_LIB_TYPE_MOVIES": "Movies",
+    "SETTINGS_LIB_TYPE_SHOWS": "TV Shows",
+    "SETTINGS_LIB_TYPE_HINT": (
+        "Choose type “Movies” or “TV Shows” — or choose “Custom category…” and "
+        "enter a name (e.g. Documentary, Comedy). Each custom category gets its "
+        "own entry in the navigation."
+    ),
+    "SETTINGS_LIB_TYPE_CUSTOM": "Custom category…",
+    "SETTINGS_LIB_TYPE_CUSTOM_TITLE": "Custom category",
+    "SETTINGS_LIB_TYPE_CUSTOM_LABEL": "Enter the category name (e.g. Documentary, Comedy):",
+    "SETTINGS_LIB_ADD": "Add",
+    "SETTINGS_LIB_REMOVE": "Remove",
+    "SETTINGS_LIB_SCAN": "Rescan",
+    "SETTINGS_LIB_REMOVE_CONFIRM": (
+        "Remove library \"{}\"?\n\n"
+        "Its entries are removed from the media library (on Apply or next start). "
+        "The files on the disk remain untouched."
+    ),
+    "SETTINGS_LIB_PICK_TITLE": "Choose folder for library",
+    "SETTINGS_PLAYER_NAME": "Name",
+    "SETTINGS_PLAYER_PATH": "Path/Command",
+    "SETTINGS_PLAYER_ARGS": "Arguments",
+    "SETTINGS_PLAYER_DEFAULT": "Default",
+    "SETTINGS_PLAYER_ADD": "Add",
+    "SETTINGS_PLAYER_REMOVE": "Remove",
+    "SETTINGS_PLAYER_AUTODETECT": "Find VLC/mpv automatically",
+    "SETTINGS_PLAYER_AUTODETECT_DONE": "Players detected:\n{}",
+    "SETTINGS_PLAYER_AUTODETECT_NONE": (
+        "No player found automatically.\nPlease enter a path manually."
+    ),
+    "SETTINGS_PLAYBACK_FULLSCREEN": "Open movies and TV shows in fullscreen",
+    "SETTINGS_PLAYBACK_YOUTUBE": "Open YouTube trailers in:",
+    "SETTINGS_YOUTUBE_BROWSER": "Browser",
+    "SETTINGS_YOUTUBE_VLC": "VLC",
+    "SETTINGS_VIEW_THEME": "Theme",
+    "SETTINGS_VIEW_LANGUAGE": "Language",
+    "SETTINGS_VIEW_POSTER_WIDTH": "Poster size",
+    "SETTINGS_POSTER_LEVELS": (("Small", 120), ("Medium", 150), ("Large", 175), ("Very large", 200)),
+    "SETTINGS_VIEW_LABEL": "Show title below the poster",
+    "SETTINGS_SHORTCUT_ACTION": "Action",
+    "SETTINGS_SHORTCUT_KEY": "Key",
+    "SETTINGS_SHORTCUT_HINT": "Double-click a row to record a new shortcut.",
+    "SETTINGS_SHORTCUT_RESET": "Reset all shortcuts",
+    "SETTINGS_SHORTCUT_CAPTURE_TITLE": "New shortcut",
+    "SETTINGS_SHORTCUT_CAPTURE_LABEL": "New key combination for “{}”:",
+    "SETTINGS_SHORTCUT_CONFLICT": (
+        "This key is already assigned to “{}”.\nPlease choose a different combination."
+    ),
+    "SETTINGS_OK": "Apply",
+    "SETTINGS_CANCEL": "Cancel",
+    "SETTINGS_SAVED": "Settings saved",
+    "SCAN_RUNNING": "Scanning {}… ({} %)",
+    "SCAN_FINISHED": "Scan finished: {} new, {} unchanged, {} removed",
+    "COUNT_MOVIES": "{} movies",
+    "COUNT_SHOWS": "{} TV shows",
+    "COUNT_ITEMS": "{} entries",
+    "SCAN_CANCELLED": "Scan cancelled",
+    "SCAN_CANCEL": "Cancel",
+    "SCAN_ERROR_TITLE": "Scan error",
+    "SCAN_NO_LIBRARIES": (
+        "No libraries configured.\nPlease add a folder in the settings first."
+    ),
+    "SCAN_DIALOG_TITLE": "Scan libraries",
+    "STATUS_PLAYER_MISSING_TITLE": "Player not found",
+    "STATUS_PLAYER_MISSING": (
+        "The player “{}” was not found.\nCheck the path or choose another player."
+    ),
+    "STATUS_FILE_MISSING_TITLE": "File missing",
+    "STATUS_FILE_MISSING": "The video file no longer exists:\n{}",
+    "STATUS_FOLDER_OPEN_FAILED": "Folder could not be opened",
+    "STATUS_FOLDER_OPEN_HINT": (
+        "The folder could not be opened:\n{}\n\n"
+        "Please set a default file manager or install xdg-utils."
+    ),
+    "STATUS_FOLDER_MISSING": "Folder not found: {}",
+    "STATUS_ERROR": "Error: {}",
+    "PLACEHOLDER_NO_POSTER": "No poster",
+    "LANG_CHANGED_TITLE": "Language changed",
+    "LANG_CHANGED_TEXT": (
+        "The new language is applied fully after a restart.\n\n"
+        "Restart MediaCenter now?"
+    ),
+    "LANG_RESTART_NOW": "Restart now",
+    "LANG_RESTART_LATER": "Later",
+    "LANG_DEFERRED_STATUS": "Language changed — applied fully after a restart",
+    "ACTION_LABELS": {
+        "play": "Play (Enter)",
+        "details": "Details / Media info",
+        "trailer": "Play trailer",
+        "search": "Focus search",
+        "scan": "Scan libraries",
+        "back": "Back / Close dialog",
+        "playlist_remove": "Remove playlist item",
+    },
+}
+
+VALID_LANGUAGES = ("de", "en")
+
+
+def _set_language(code: str) -> None:
+    """UI-Sprache umschalten — tauscht die String-Attribute der S-Klasse.
+
+    Deutsch ist der Ursprungszustand (Klassendefinition); Englisch überlagert
+    nur die im Wörterbuch vorhandenen Keys. Unbekannte Codes → Default Deutsch
+    mit Log-Warnung (nie still).
+    """
+    if code not in VALID_LANGUAGES:
+        logger.warning("Unbekannte Sprache %r — nutze Deutsch", code)
+        code = "de"
+    overlay = _EN_STRINGS if code == "en" else S._DE
+    for key, default in S._DE.items():
+        setattr(S, key, overlay.get(key, default))
+    S.LANGUAGE = code
 
 
 def shortcut_map(cfg: dict) -> dict[str, str]:
@@ -2759,8 +3007,9 @@ def render_placeholder(title: str, width: int, height: int, tokens: dict[str, st
         draw.text(((width - text_width) / 2, y), line, font=font, fill=fg)
         y += line_height
     small = _font_pil(max(9, width // 16))
-    hint_width = draw.textlength("Kein Poster", font=small)
-    draw.text(((width - hint_width) / 2, height - small.size - 12), "Kein Poster", font=small, fill=dim)
+    hint = S.PLACEHOLDER_NO_POSTER
+    hint_width = draw.textlength(hint, font=small)
+    draw.text(((width - hint_width) / 2, height - small.size - 12), hint, font=small, fill=dim)
     return image
 
 
@@ -2793,7 +3042,8 @@ def thumb_cache_key(
     if video:
         key = f"{prefix}vid:{ident}:{size}:{video}:{int(missing)}"
         return f"{key}:{fallback}" if fallback else key
-    return f"ph:{theme_name}:{width}:{title}:{int(missing)}"
+    # Platzhalter hängen an Sprache+Theme (der gerenderte Text ist sprachabhängig).
+    return f"ph:{S.LANGUAGE}:{theme_name}:{width}:{title}:{int(missing)}"
 
 
 class ThumbnailWorker(QThread):
@@ -3328,6 +3578,10 @@ class SeriesView(QWidget):
         self._theme_name = theme_name
         self._current_show: Show | None = None
         self._current_season: int | None = None
+        # Navigations-History für Zurück/Vor-Knöpfe (wie im Browser):
+        # Einträge (level, show_id, season), _nav_pos = Position in der Liste.
+        self._nav_history: list[tuple[int, int | None, int | None]] = [(LEVEL_SHOWS, None, None)]
+        self._nav_pos = 0
         self._thumb_worker: ThumbnailWorker | None = None
         self._thumb_callbacks: dict[int, object] = {}
         self._thumb_memory_keys: dict[int, tuple] = {}
@@ -3338,11 +3592,24 @@ class SeriesView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
 
+        # Kopfzeile: Zurück/Vor-Knöpfe + Brotkrume (klickbare Ebenennamen).
+        top_row = QHBoxLayout()
+        top_row.setContentsMargins(8, 4, 8, 0)
+        top_row.setSpacing(6)
+        self._back_button = QPushButton(S.SERIES_NAV_BACK)
+        self._back_button.setToolTip(S.SERIES_NAV_BACK_TOOLTIP)
+        self._back_button.clicked.connect(self.go_back)
+        self._forward_button = QPushButton(S.SERIES_NAV_FORWARD)
+        self._forward_button.setToolTip(S.SERIES_NAV_FORWARD_TOOLTIP)
+        self._forward_button.clicked.connect(self.go_forward)
+        top_row.addWidget(self._back_button)
+        top_row.addWidget(self._forward_button)
         self._breadcrumb = QLabel()
         self._breadcrumb.setTextFormat(Qt.TextFormat.RichText)
         self._breadcrumb.linkActivated.connect(self._on_breadcrumb)
-        self._breadcrumb.setContentsMargins(12, 6, 12, 0)
-        layout.addWidget(self._breadcrumb)
+        self._breadcrumb.setContentsMargins(4, 6, 12, 0)
+        top_row.addWidget(self._breadcrumb, stretch=1)
+        layout.addLayout(top_row)
 
         self._stack = QStackedWidget(self)
         layout.addWidget(self._stack, stretch=1)
@@ -3401,6 +3668,7 @@ class SeriesView(QWidget):
         self._stack.addWidget(self._episode_list)
 
         self._update_breadcrumb()
+        self._update_nav_buttons()
 
     def _request_thumb(
         self,
@@ -3551,6 +3819,7 @@ class SeriesView(QWidget):
         self._fill_season_page()
         self._stack.setCurrentIndex(LEVEL_SEASONS)
         self._update_breadcrumb()
+        self._nav_push(LEVEL_SEASONS)
 
     def _fill_season_page(self) -> None:
         show = self._current_show
@@ -3632,6 +3901,7 @@ class SeriesView(QWidget):
         self._fill_episode_list()
         self._stack.setCurrentIndex(LEVEL_EPISODES)
         self._update_breadcrumb()
+        self._nav_push(LEVEL_EPISODES)
 
     def _fill_episode_list(self) -> None:
         show, season = self._current_show, self._current_season
@@ -3695,23 +3965,75 @@ class SeriesView(QWidget):
 
     def _on_breadcrumb(self, link: str) -> None:
         if link == str(LEVEL_SHOWS):
-            self._stack.setCurrentIndex(LEVEL_SHOWS)
             self._current_show = None
+            self._current_season = None
+            self._stack.setCurrentIndex(LEVEL_SHOWS)
+            self._update_breadcrumb()
+            self._nav_push(LEVEL_SHOWS)
         elif link == str(LEVEL_SEASONS) and self._current_show:
+            self._current_season = None
             self._stack.setCurrentIndex(LEVEL_SEASONS)
-        self._update_breadcrumb()
+            self._update_breadcrumb()
+            self._nav_push(LEVEL_SEASONS)
 
     def go_back(self) -> bool:
-        current = self._stack.currentIndex()
-        if current == LEVEL_EPISODES:
-            self._stack.setCurrentIndex(LEVEL_SEASONS)
-        elif current == LEVEL_SEASONS:
-            self._stack.setCurrentIndex(LEVEL_SHOWS)
-            self._current_show = None
-        else:
+        """Eine Ebene zurück (Knopf oder Esc) — über die Navigations-History."""
+        if self._nav_pos <= 0:
             return False
-        self._update_breadcrumb()
+        self._nav_pos -= 1
+        self._nav_restore(self._nav_history[self._nav_pos])
         return True
+
+    def go_forward(self) -> bool:
+        """Eine Ebene vor — nur nach einem „Zurück“ (Vor-Zweig der History)."""
+        if self._nav_pos + 1 >= len(self._nav_history):
+            return False
+        self._nav_pos += 1
+        self._nav_restore(self._nav_history[self._nav_pos])
+        return True
+
+    def _nav_push(self, level: int) -> None:
+        """Neuen Zustand nach einer Vorwärts-Navigation aufnehmen.
+
+        Kürzt den Vor-Zweig ab der aktuellen Position (wie im Browser) und
+        hängt den Zustand nur an, wenn er sich vom letzten unterscheidet
+        (Brotkrumen-Klicks auf die aktuelle Ebene stapeln nicht doppelt).
+        """
+        state = (level, self._current_show.id if self._current_show else None, self._current_season)
+        if self._nav_pos + 1 < len(self._nav_history):
+            del self._nav_history[self._nav_pos + 1 :]
+        if not self._nav_history or self._nav_history[-1] != state:
+            self._nav_history.append(state)
+        self._nav_pos = len(self._nav_history) - 1
+        self._update_nav_buttons()
+
+    def _nav_restore(self, state: tuple[int, int | None, int | None]) -> None:
+        """Zustand aus der History wiederherstellen (Daten frisch aus der DB)."""
+        level, show_id, season = state
+        show = self._show_by_id(show_id) if show_id is not None else None
+        self._current_show = show
+        self._current_season = season
+        if level == LEVEL_SHOWS or show is None:
+            self._stack.setCurrentIndex(LEVEL_SHOWS)
+        elif level == LEVEL_SEASONS:
+            self._fill_season_page()
+            self._stack.setCurrentIndex(LEVEL_SEASONS)
+        else:
+            self._fill_episode_list()
+            self._stack.setCurrentIndex(LEVEL_EPISODES)
+        self._update_breadcrumb()
+        self._update_nav_buttons()
+
+    def _show_by_id(self, show_id: int) -> Show | None:
+        """Serie aus der DB holen (Pfad-Getter wie _show_clicked) — None wenn weg."""
+        row = self._conn.execute("SELECT path FROM shows WHERE id = ?", (show_id,)).fetchone()
+        if not row:
+            return None
+        return db_get_show_by_path(self._conn, row["path"])
+
+    def _update_nav_buttons(self) -> None:
+        self._back_button.setEnabled(self._nav_pos > 0)
+        self._forward_button.setEnabled(self._nav_pos + 1 < len(self._nav_history))
 
     def _update_breadcrumb(self) -> None:
         sec, primary = self._theme["text_secondary"], self._theme["text_primary"]
@@ -3800,7 +4122,8 @@ class SeriesView(QWidget):
     def shutdown(self) -> None:
         if self._thumb_worker is not None:
             self._thumb_worker.stop()
-            self._thumb_worker.wait(2000)
+            if not self._thumb_worker.wait(2000):
+                logger.warning("Serien-Thumbnail-Worker beendet sich nicht rechtzeitig")
 
 
 def _esc_html(text: str) -> str:
@@ -4678,6 +5001,18 @@ class SettingsDialog(QDialog):
         page = QWidget()
         layout = QVBoxLayout(page)
         ui = self._cfg.get("ui", {})
+        lang_row = QHBoxLayout()
+        lang_row.addWidget(QLabel(S.SETTINGS_VIEW_LANGUAGE))
+        self._language_combo = QComboBox()
+        # Sprachnamen bewusst in der jeweiligen Sprache selbst (Standard-UX).
+        self._language_combo.addItem("Deutsch", "de")
+        self._language_combo.addItem("English", "en")
+        self._language_combo.setCurrentIndex(
+            1 if self._cfg.get("language", "de") == "en" else 0
+        )
+        lang_row.addWidget(self._language_combo)
+        lang_row.addStretch(1)
+        layout.addLayout(lang_row)
         theme_row = QHBoxLayout()
         theme_row.addWidget(QLabel(S.SETTINGS_VIEW_THEME))
         self._theme_combo = QComboBox()
@@ -4764,6 +5099,7 @@ class SettingsDialog(QDialog):
     def _on_accept(self) -> None:
         self._write_back_libraries()
         self._write_back_players()
+        self._cfg["language"] = self._language_combo.currentData() or "de"
         self._cfg["playback"] = {
             "fullscreen": self._fullscreen.isChecked(),
             "youtube_trailer": self._youtube.currentData() or "browser",
@@ -4786,6 +5122,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.cfg = load_settings()
+        _set_language(self.cfg.get("language", "de"))  # UI-Sprache vor dem ersten Widget
         self.conn = db_connect(data_dir() / "library.db")
         self._scan_worker: ScanWorker | None = None
         self._scan_dialog: QProgressDialog | None = None
@@ -5782,6 +6119,7 @@ class MainWindow(QMainWindow):
 
     # -- Einstellungen
     def _open_settings(self) -> None:
+        old_language = S.LANGUAGE
         dialog = SettingsDialog(self, self.cfg, conn=self.conn, scan_requested=self._scan_library)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self.cfg = load_settings()
@@ -5799,7 +6137,50 @@ class MainWindow(QMainWindow):
                 shortcut.deleteLater()
             self._register_shortcuts()
             self.refresh_all()
-            self.statusBar().showMessage(S.SETTINGS_SAVED, 5000)
+            if self.cfg.get("language", "de") != old_language:
+                # Sprache erst nach Neustart vollständig — Nachfrage statt halb
+                # übersetzter Oberfläche (bereits gebaute Widgets bleiben sonst gemischt).
+                self._prompt_language_restart(old_language)
+            else:
+                self.statusBar().showMessage(S.SETTINGS_SAVED, 5000)
+
+    def _prompt_language_restart(self, old_language: str) -> None:
+        """Sprachwechsel bestätigen: jetzt neu starten (voll übernommen) oder später."""
+        _set_language(self.cfg.get("language", "de"))  # Nachfrage in der NEUEN Sprache
+        box = QMessageBox(self)
+        box.setWindowTitle(S.LANG_CHANGED_TITLE)
+        box.setText(S.LANG_CHANGED_TEXT)
+        box.setIcon(QMessageBox.Icon.Question)
+        restart = box.addButton(S.LANG_RESTART_NOW, QMessageBox.ButtonRole.YesRole)
+        box.addButton(S.LANG_RESTART_LATER, QMessageBox.ButtonRole.NoRole)
+        box.exec()
+        if box.clickedButton() is restart and self._restart_application():
+            return  # Fenster schließt sich — die neue Instanz startet in der neuen Sprache
+        _set_language(old_language)  # UI bleibt konsistent in der alten Sprache
+        self.statusBar().showMessage(S.LANG_DEFERRED_STATUS, 8000)
+
+    def _restart_application(self) -> bool:
+        """Anwendung als neuen, abgekoppelten Prozess starten; Fenster schließen.
+
+        False (mit Log) statt stiller Fehler, wenn der Prozess nicht startet —
+        dann bleibt die laufende Instanz offen (Sprache beim nächsten manuellen
+        Neustart vollständig übernommen).
+        """
+        try:
+            if getattr(sys, "frozen", False):
+                program, args = sys.executable, list(sys.argv[1:])
+            else:
+                program, args = sys.executable, [str(Path(__file__).resolve())]
+            logger.info("Neustart: %s %s", program, " ".join(args))
+            started = QProcess.startDetached(program, args)
+        except OSError:
+            started = False
+            logger.error("Neustart fehlgeschlagen", exc_info=True)
+        if not started:
+            logger.error("Neustart konnte nicht gestartet werden — bitte manuell neu starten")
+            return False
+        self.close()
+        return True
 
     def _scan_library(self, path: str, on_finished=None) -> None:
         """Scan aus dem Einstellungen-Dialog: gewählte Bibliothek oder alle."""
@@ -5834,10 +6215,15 @@ class MainWindow(QMainWindow):
         self._series_view.shutdown()
         if self._thumb_worker is not None:
             self._thumb_worker.stop()
-            self._thumb_worker.wait(2000)
+            if not self._thumb_worker.wait(2000):
+                logger.warning("Thumbnail-Worker beendet sich nicht rechtzeitig")
         if self._scan_worker is not None and self._scan_worker.isRunning():
             self._scan_worker.cancel()
-            self._scan_worker.wait(5000)
+            if not self._scan_worker.wait(5000):
+                logger.warning(
+                    "Scan-Worker beendet sich nicht rechtzeitig — läuft bis zum nächsten "
+                    "Abbruchpunkt weiter und wird mit dem Prozessende beendet"
+                )
         self.conn.close()
         super().closeEvent(event)
 
@@ -5901,7 +6287,11 @@ def main() -> int:
     logger.info("Hauptfenster gezeigt (+%.2fs)", time.perf_counter() - _t0)
     # Erstbefüllung + Startscan nach dem ersten Paint (siehe startup_load).
     QTimer.singleShot(120, window.startup_load)
-    return app.exec()
+    code = app.exec()
+    # Log-Marker: Die Log-Datei belegt damit, ob die App-Schleife nach dem
+    # Fensterschließen sauber zurückkehrt (Diagnose für „Prozess bleibt hängen“).
+    logger.info("MediaCenter beendet")
+    return code
 
 
 if __name__ == "__main__":

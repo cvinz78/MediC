@@ -56,13 +56,13 @@ alle drei) oder unter **Einstellungen → Ansicht**. Der Wechsel wirkt sofort, o
 - **Posterwand ↔ Liste** umschaltbar (Filme, Serien und eigene Kategorien; Serien-Liste mit Titel/Jahr/Bewertung)
 - **4 Postergrößen** (Klein/Mittel/Groß/Sehr groß), Titel unter dem Poster an/aus
 - **Live-Suche** über Titel, Genre und Jahr — inkl. Jahresbereichen (`1977-2005`, `1977-`, `-2005`)
-- **Genre-Filter mit Zählern** — getrennt je Ansicht (Filme-Seite zeigt nur Film-Genres usw.)
+- **Genre-Filter mit Zählern** — getrennt je Ansicht (Filme-Seite zeigt nur Film-Genres usw.), als Klick-Menü mit **gleicher Bedienung unter Windows & Linux**
 - **Sortierung** nach Titel oder Jahr
 - **„Zufall“-Button**: spielt einen zufälligen Film bzw. eine zufällige Episode — bei aktivem Filter aus den gefilterten Einträgen, in der Staffel-/Episoden-Ansicht aus der aktuell geöffneten Serie/Staffel
 
 ### Serien-Ansicht (3 Ebenen)
 - Ebene 1: Posterwand aller Serien → Ebene 2: Staffeln + Serieninfos (Fanart-Hintergrund) → Ebene 3: Episodenliste mit Thumbnails
-- **Breadcrumb-Navigation** (Serien › Show › Staffel), `Esc` geht eine Ebene zurück
+- **Breadcrumb-Navigation** (Serien › Show › Staffel) + **Zurück/Vor-Knöpfe** wie im Browser — `Esc` geht über die History mehrstufig zurück
 - Ganze Serien oder einzelne Staffeln abspielen (temporäre M3U8 an den Player) oder in Playlisten aufnehmen
 
 ### Detail-Dialog (Medieninfos)
@@ -107,6 +107,7 @@ und „Alle zurücksetzen“). Standard-Belegung:
 
 ### Weitere Details
 - **3 Skins**: Darkskin, Bluemoon, Creamy (siehe Screenshots oben)
+- **Sprache Deutsch/English** (Einstellungen → Ansicht; Standard Deutsch, Übernahme nach Neustart)
 - **Fenstergröße/Position/Maximierung wird gemerkt**
 - „Ordner öffnen“ via `xdg-open` (Linux) bzw. Windows-Explorer
 - **Scrollbar-Farben je Skin**: Griff immer sichtbar in der Textfarbe des Skins
@@ -132,12 +133,12 @@ Fertige Builds gibt es in den
 > Gestartet wird über die `MediaCenterx64.exe` in diesem Ordner; deinstallieren
 > = Ordner löschen.
 
-**SHA-256 (Version 2.3):**
+**SHA-256 (Version 2.7):**
 
 ```
-dd57a47aaaf684f97c468c82599761a969660d2992ec73b1833724987b938399  MediC-windows-x64.exe
-d6db4b8ff3576c3ab4e5894eed79c3ce5a73c67a8da26fdf160cfd7d9254d09c  MediC-linux-x64
-be37582991e5041ee02b19b5fe4f0977fd118fe869f559278dafa197de9f410e  MediC-windows-win7-x64.exe
+89631b98817b81f06844071a572dfa606860daf4e57586da33a3499bfbdee34b  MediC-windows-x64.exe
+6bf4809a84c2a5e57120112a9cca3a853af3aa8f48d539e6c8cd50bf11a94f31  MediC-linux-x64
+3ade745bd0b7a48e5a248a72a4bad389f7af2631595bb6c6ede7ad64f45fe226  MediC-windows-win7-x64.exe
 ```
 
 **Hinweise:**
@@ -146,6 +147,8 @@ be37582991e5041ee02b19b5fe4f0977fd118fe869f559278dafa197de9f410e  MediC-windows-
 - **Linux**: `chmod +x MediC-linux-x64` und starten. Die Anwendung entpackt sich **einmalig**
   nach `/tmp/MediaCenter/<Version>` (Smart-Cache) und startet danach sofort von dort; nichts
   wird beim Beenden gelöscht, neu entpackt wird nur bei geleertem Ordner oder älterer Version.
+  Auch aus einem Terminal gestartet, wird der Prompt sofort zurückgegeben — die App läuft
+  abgekoppelt (keine Logzeilen im Terminal), das Protokoll steht in `~/.medi/logs/mediacenter.log`.
 - **Windows 7 SP1/8.1**: Qt 6 läuft dort nicht — dafür gibt es die separate
   `MediC-windows-win7-x64.exe` (PyQt5/Qt 5.15, mit Python 3.8.10 gebaut). Einfach starten,
   keine Installation.
