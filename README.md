@@ -7,7 +7,7 @@
 **Mediathek-GUI für Windows &amp; Linux** — Posterwand, NFO-Unterstützung,
 Playlisten und Wiedergabe über externe Player wie VLC oder mpv.
 
-**[⬇ Download (aktuelle Version)](https://github.com/cvinz78/MediC/releases/latest)** · [Lizenz: GPL-3.0](LICENSE)
+**[⬇ Download (aktuelle Version)](https://github.com/cvinz78/MediC/releases/latest)** · [Lizenz: GPL-3.0](LICENSE) · [🇬🇧 English](README_EN.md)
 
 </div>
 
