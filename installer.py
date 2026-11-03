@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 APP_NAME = "MediaCenter"
-APP_VERSION = "1.9"
+APP_VERSION = "2.3"
 PAYLOAD_DIRNAME = "MediaCenterx64"
 EXE_NAME = "MediaCenterx64.exe"
 UNINSTALL_FILENAME = "uninstall.cmd"
@@ -229,6 +229,17 @@ def main_gui() -> int:
         "QPushButton#danger { background-color: #6f2f2f; border-color: #8f3f3f; }"
         "QLineEdit { background-color: #232328; border: 1px solid #4a4a52; border-radius: 4px; padding: 4px; }"
         "QLabel#status { color: #9aa0a6; }"
+        # Auswahl-Zeilen (Installieren/Portable): die GEWÄHLTE Zeile wird grün
+        # markiert — ohne diese Styles ist der Radio-Punkt im dunklen Theme
+        # kaum erkennbar (Nutzerfeedback 2026-11-02).
+        "QRadioButton { padding: 7px 10px; border: 1px solid transparent; border-radius: 4px; spacing: 10px; }"
+        "QRadioButton:checked { background-color: #2f6f3f; border: 1px solid #3f8f55;"
+        "                       color: #ffffff; font-weight: bold; }"
+        "QRadioButton::indicator { width: 14px; height: 14px; }"
+        "QRadioButton::indicator:unchecked { border: 2px solid #4a4a52; border-radius: 8px;"
+        "                                    background-color: #232328; }"
+        "QRadioButton::indicator:checked { border: 2px solid #d9f2df; border-radius: 8px;"
+        "                                  background-color: #7ed67e; }"
     )
 
     window = QWidget()

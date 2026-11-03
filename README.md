@@ -124,6 +124,7 @@ Fertige Builds gibt es in den
 |---|---|---|
 | `MediC-windows-x64.exe` | Windows 10/11 (x64) | **Installer — enthält beide Varianten in einer Datei:** beim Start wählt man **„Installieren“** (Programmordner, Startmenü-Verknüpfung, Eintrag unter „Programme und Features“ mit Deinstallation) oder **„Portable entpacken“** (Programmordner ohne Verknüpfungen/Registry — ideal z. B. für den USB-Stick). Die App-EXE heißt danach `MediaCenterx64.exe` |
 | `MediC-linux-x64` | Linux (x64) | Eine einzelne ausführbare Datei — kein Python/pip nötig, nur einen Desktop mit VLC/mpv |
+| `MediC-windows-win7-x64.exe` | Windows 7 SP1/8.1 | Einzelne EXE für ältere Windows-Systeme (PyQt5/Qt 5.15) — OneFile, kein `_internal`-Ordner nötig |
 
 > **Windows ohne Installation:** Wer nichts installieren möchte, führt die
 > `MediC-windows-x64.exe` aus und wählt **„Portable entpacken“** — der Installer
@@ -131,11 +132,12 @@ Fertige Builds gibt es in den
 > Gestartet wird über die `MediaCenterx64.exe` in diesem Ordner; deinstallieren
 > = Ordner löschen.
 
-**SHA-256 (Version 1.9):**
+**SHA-256 (Version 2.3):**
 
 ```
-b764ed1ea6bcbb2b4da32088706d625ed97250f179362beaaaf9b4424f62d4b8  MediC-windows-x64.exe
-82523296a58aacb8e74d36048232652940e181c856eaee215dc2063da3478a82  MediC-linux-x64
+dd57a47aaaf684f97c468c82599761a969660d2992ec73b1833724987b938399  MediC-windows-x64.exe
+d6db4b8ff3576c3ab4e5894eed79c3ce5a73c67a8da26fdf160cfd7d9254d09c  MediC-linux-x64
+be37582991e5041ee02b19b5fe4f0977fd118fe869f559278dafa197de9f410e  MediC-windows-win7-x64.exe
 ```
 
 **Hinweise:**
@@ -144,8 +146,9 @@ b764ed1ea6bcbb2b4da32088706d625ed97250f179362beaaaf9b4424f62d4b8  MediC-windows-
 - **Linux**: `chmod +x MediC-linux-x64` und starten. Die Anwendung entpackt sich **einmalig**
   nach `/tmp/MediaCenter/<Version>` (Smart-Cache) und startet danach sofort von dort; nichts
   wird beim Beenden gelöscht, neu entpackt wird nur bei geleertem Ordner oder älterer Version.
-- **Windows 7 SP1/8.1**: Qt 6 läuft dort nicht — eine Win7-Variante (PyQt5) ist in diesem
-  Release nicht enthalten.
+- **Windows 7 SP1/8.1**: Qt 6 läuft dort nicht — dafür gibt es die separate
+  `MediC-windows-win7-x64.exe` (PyQt5/Qt 5.15, mit Python 3.8.10 gebaut). Einfach starten,
+  keine Installation.
 
 ---
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """MediaCenter — Mediathek-GUI für Linux, als Einzeldatei.
 
 Posterwand: Klick auf ein Poster startet den Film/Serie im
@@ -31,6 +31,7 @@ import shlex
 import sqlite3
 import subprocess
 import sys
+import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -53,6 +54,10 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 logger = logging.getLogger("mediacenter")
 
+#: Perf-Zähler ab Modulstart (vor allen GUI-Imports) — macht die Import-Phase
+#: im Start-Timing-Log sichtbar ("+X.XXs Modulstart" beim ersten Logeintrag).
+_START_T0 = time.perf_counter()
+
 ENV_DATA_DIR = "MEDIACENTER_DATA_DIR"
 
 SHORTCUT_ACTIONS: dict[str, str] = {
@@ -71,7 +76,7 @@ VALID_THEMES = ("darkskin", "bluemoon", "creamy")
 SETTINGS_VERSION = 2
 
 #: Programmversion — sichtbar im Fenstertitel (Build-Kennzeichnung).
-APP_VERSION = "1.9"
+APP_VERSION = "2.3"
 
 
 def data_root() -> Path:
@@ -2108,6 +2113,7 @@ from PySide6.QtCore import (
     QSortFilterProxyModel,
     Qt,
     QThread,
+    QTimer,
     Signal,
 )
 from PySide6.QtGui import (
@@ -4723,6 +4729,17 @@ class MainWindow(QMainWindow):
         self._apply_theme()
         self._register_shortcuts()
         self._prune_orphans()
+        # Erstbefüllung + Startscan laufen bewusst NICHT hier im Konstruktor,
+        # sondern in startup_load() — aufgerufen aus main() nach dem ersten
+        # gemalten Hauptfenster (QTimer). Sonst kann die Thumbnail-/Scan-Phase
+        # das erste Malen verzögern → weißes Fenster beim Start.
+
+    def startup_load(self) -> None:
+        """Erstbefüllung (refresh_all) + optionaler Startscan.
+
+        Wird aus main() via QTimer NACH dem ersten Paint des Hauptfensters
+        aufgerufen — die Poster-/Scan-Phase blockiert nie das erste Malen.
+        """
         self.refresh_all()
         if self.cfg.get("scan", {}).get("scan_on_start", True):
             self._start_scan()
@@ -5751,9 +5768,12 @@ def setup_logging() -> None:
 
 
 def main() -> int:
+    _t0 = time.perf_counter()
     _setup_frozen_qt()
     setup_logging()
-    logger.info("MediaCenter startet (Einzeldatei-Version)")
+    logger.info(
+        "MediaCenter startet (Einzeldatei-Version, +%.2fs Modulstart)", time.perf_counter() - _START_T0
+    )
     app = QApplication(sys.argv)
     app.setApplicationName("MediaCenter")
     icon_path = app_icon_path()
@@ -5764,6 +5784,9 @@ def main() -> int:
         logger.warning("App-Icon icon/mediacenter.png nicht gefunden")
     window = MainWindow()
     window.show()
+    logger.info("Hauptfenster gezeigt (+%.2fs)", time.perf_counter() - _t0)
+    # Erstbefüllung + Startscan nach dem ersten Paint (siehe startup_load).
+    QTimer.singleShot(120, window.startup_load)
     return app.exec()
 
 
