@@ -76,7 +76,7 @@ VALID_THEMES = ("darkskin", "bluemoon", "creamy")
 SETTINGS_VERSION = 2
 
 #: Programmversion — sichtbar im Fenstertitel (Build-Kennzeichnung).
-APP_VERSION = "2.7"
+APP_VERSION = "2.8"
 
 
 def data_root() -> Path:
@@ -250,7 +250,19 @@ def normalize_library_type(raw: str) -> str:
     lowered = value.casefold()
     if lowered in ("movies", "movie", "film", "filme"):
         return "movies"
-    if lowered in ("shows", "show", "serie", "serien"):
+    if lowered in (
+        "shows",
+        "show",
+        "serie",
+        "serien",
+        "series",
+        "tv shows",
+        "tv-shows",
+        "tvshow",
+        "tvshows",
+        "tv series",
+        "tv-series",
+    ):
         return "shows"
     return value
 

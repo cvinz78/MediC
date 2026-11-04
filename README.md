@@ -38,6 +38,7 @@ alle drei) oder unter **Einstellungen → Ansicht**. Der Wechsel wirkt sofort, o
 
 ### Bibliotheken & Scan
 - **Mehrere Bibliotheken** konfigurierbar (Name, Typ, Pfad) — beliebig viele Unterordner rekursiv
+- Serien-Bibliothekstypen erkennen neben `shows`/`serien` auch englische Varianten wie `series`, `tv shows` und `tv-series`
 - **Eigene Kategorien** neben „Filme“ und „Serien“ (z. B. „Doku“, „Comedy“) — jede Kategorie bekommt einen eigenen Eintrag in der Navigation
 - **Auto-Klassifikation**: Ordner mit Serienstruktur (`tvshow.nfo`, `SxxEyy`) landen automatisch in der Serien-Ansicht — auch innerhalb von Film-/Kategorie-Bibliotheken
 - **Inkrementeller Scan**: unveränderte Einträge (mtime + Pfad) werden nicht neu eingelesen
