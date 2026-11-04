@@ -134,12 +134,12 @@ Fertige Builds gibt es in den
 > Gestartet wird über die `MediaCenterx64.exe` in diesem Ordner; deinstallieren
 > = Ordner löschen.
 
-**SHA-256 (Version 2.7):**
+**SHA-256 (Version 2.8):**
 
 ```
-89631b98817b81f06844071a572dfa606860daf4e57586da33a3499bfbdee34b  MediC-windows-x64.exe
-6bf4809a84c2a5e57120112a9cca3a853af3aa8f48d539e6c8cd50bf11a94f31  MediC-linux-x64
-3ade745bd0b7a48e5a248a72a4bad389f7af2631595bb6c6ede7ad64f45fe226  MediC-windows-win7-x64.exe
+da5b699e441703456e1e0e1a7fe70ff78824556350c3a0b1043005216b09b975  MediC-windows-x64.exe
+c2987f5bb6e695599b767f273238b940f65274a0e4a7286255253539cb5ac61c  MediC-linux-x64
+39726fc5d1b593e321f41005a2baace685610241b15ca7ea97c78b917307aa3e  MediC-windows-win7-x64.exe
 ```
 
 **Hinweise:**
@@ -412,12 +412,12 @@ Ready-made builds are available in the
 > copies just the program folder to a directory of your choice. Launch it via the
 > `MediaCenterx64.exe` in that folder; uninstalling = deleting the folder.
 
-**SHA-256 (version 2.7):**
+**SHA-256 (version 2.8):**
 
 ```
-89631b98817b81f06844071a572dfa606860daf4e57586da33a3499bfbdee34b  MediC-windows-x64.exe
-6bf4809a84c2a5e57120112a9cca3a853af3aa8f48d539e6c8cd50bf11a94f31  MediC-linux-x64
-3ade745bd0b7a48e5a248a72a4bad389f7af2631595bb6c6ede7ad64f45fe226  MediC-windows-win7-x64.exe
+da5b699e441703456e1e0e1a7fe70ff78824556350c3a0b1043005216b09b975  MediC-windows-x64.exe
+c2987f5bb6e695599b767f273238b940f65274a0e4a7286255253539cb5ac61c  MediC-linux-x64
+39726fc5d1b593e321f41005a2baace685610241b15ca7ea97c78b917307aa3e  MediC-windows-win7-x64.exe
 ```
 
 **Notes:**
